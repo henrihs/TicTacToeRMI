@@ -2,7 +2,9 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
+
 import java.awt.*;
+import java.rmi.RemoteException;
 
 /**
  * A Tic Tac Toe application.
@@ -20,17 +22,19 @@ public class TicTacToe extends JFrame implements ListSelectionListener
   private final char playerMarks[] = {'X', 'O'};
   private int currentPlayer = 0; // Player to set the next mark.
   private int localPlayer;
+  private ITicTacToeRemote remote;
 
 //  public static void main(String args[])
 //  {
 //    new TicTacToe();
 //  }
 
-  public TicTacToe(int player)
+  public TicTacToe(int player, ITicTacToeRemote remote)
   {
     super("TDT4190: Tic Tac Toe");
 
     localPlayer = player;
+    this.remote = remote;
     boardModel = new BoardModel(BOARD_SIZE);
     board = new JTable(boardModel);
     board.setFont(board.getFont().deriveFont(25.0f));
@@ -78,6 +82,8 @@ public class TicTacToe extends JFrame implements ListSelectionListener
    */
   public void valueChanged(ListSelectionEvent e)
   {
+	if (playerMarks[currentPlayer] != localPlayer)
+		return;
     if (e.getValueIsAdjusting())
       return;
     int x = board.getSelectedColumn();
@@ -87,6 +93,12 @@ public class TicTacToe extends JFrame implements ListSelectionListener
     if (boardModel.setCell(x, y, playerMarks[currentPlayer]))
       setStatusMessage("Player " + playerMarks[currentPlayer] + " won!");
     currentPlayer = 1 - currentPlayer; // The next turn is by the other player.
+    try {
+		remote.remoteSetCell(x,y,playerMarks[currentPlayer]);
+	} catch (RemoteException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
   }
   
   public BoardModel getBoardModel(){
