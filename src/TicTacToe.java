@@ -19,16 +19,18 @@ public class TicTacToe extends JFrame implements ListSelectionListener
   private final JLabel statusLabel = new JLabel();
   private final char playerMarks[] = {'X', 'O'};
   private int currentPlayer = 0; // Player to set the next mark.
+  private int localPlayer;
 
-  public static void main(String args[])
-  {
-    new TicTacToe();
-  }
+//  public static void main(String args[])
+//  {
+//    new TicTacToe();
+//  }
 
-  public TicTacToe()
+  public TicTacToe(int player)
   {
     super("TDT4190: Tic Tac Toe");
 
+    localPlayer = player;
     boardModel = new BoardModel(BOARD_SIZE);
     board = new JTable(boardModel);
     board.setFont(board.getFont().deriveFont(25.0f));
@@ -85,5 +87,9 @@ public class TicTacToe extends JFrame implements ListSelectionListener
     if (boardModel.setCell(x, y, playerMarks[currentPlayer]))
       setStatusMessage("Player " + playerMarks[currentPlayer] + " won!");
     currentPlayer = 1 - currentPlayer; // The next turn is by the other player.
+  }
+  
+  public BoardModel getBoardModel(){
+	  return this.boardModel;
   }
 }
