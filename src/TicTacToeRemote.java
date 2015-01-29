@@ -16,8 +16,12 @@ public class TicTacToeRemote extends UnicastRemoteObject implements ITicTacToeRe
 
 	@Override
 	public void remoteSetCell(int x, int y, char mark) throws RemoteException {
-		tictactoe.getBoardModel().setCell(x, y, mark);
-
+		tictactoe.setStatusMessage("Your move");
+		tictactoe.togglePlayer();
+		if( tictactoe.getBoardModel().setCell(x, y, mark)){
+			tictactoe.setStatusMessage(mark + " has won, you lost!");
+			tictactoe.gameEnded();
+		}
 	}
 
 	/**
@@ -31,18 +35,19 @@ public class TicTacToeRemote extends UnicastRemoteObject implements ITicTacToeRe
 			System.out.println("Too few arguments");
 			return;
 		}
-		System.setSecurityManager(new RMISecurityManager());
+//		System.setSecurityManager(new RMISecurityManager());
 
 		try {
 
 			TicTacToeRemote local = new TicTacToeRemote();
-			rebind(args[1], local);
-			
-			if (args[0] == "client"){
-				ITicTacToeRemote opponent = local.lookup(args[2]);
-				opponent.remoteLookup(args[1]);
-				TicTacToe tictactoe = new TicTacToe(0, opponent);
-				tictactoe.setStatusMessage("Connected to " + args[2] + ", do your first move!");
+			if (args[0].equals("server"))
+				rebind(args[1], local);
+
+			if (args[0].equals("client")){
+				ITicTacToeRemote opponent = local.lookup(args[1]);
+				opponent.remoteLookup(local);
+				tictactoe = new TicTacToe(0, opponent);
+				tictactoe.setStatusMessage("Connected to " + args[1] + ", do your first move!");
 			}
 
 		} catch (RemoteException e) {
@@ -69,25 +74,17 @@ public class TicTacToeRemote extends UnicastRemoteObject implements ITicTacToeRe
 			e.printStackTrace();
 		}
 	}
-	
+
 	public ITicTacToeRemote lookup(String url) throws MalformedURLException, RemoteException, NotBoundException{
 		return (ITicTacToeRemote) Naming.lookup("rmi://" + url + "/ITicTacToeRemote");
 	}
 
 	@Override
-	public void remoteLookup(String url) throws RemoteException {
-		try {
-			ITicTacToeRemote opponent = lookup(url);
-			TicTacToe tictactoe = new TicTacToe(1, opponent);
-			tictactoe.setStatusMessage("Connected to " + url + ", wait for your opponent to make the first move!");
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+	public void remoteLookup(ITicTacToeRemote obj) throws RemoteException {
+
+		ITicTacToeRemote opponent = obj;
+		tictactoe = new TicTacToe(1, opponent);
+		tictactoe.setStatusMessage("Connected to client, wait for your opponent to make the first move!");		
 	}
 
 }

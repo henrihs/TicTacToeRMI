@@ -21,6 +21,7 @@ public class TicTacToe extends JFrame implements ListSelectionListener
   private final JLabel statusLabel = new JLabel();
   private final char playerMarks[] = {'X', 'O'};
   private int currentPlayer = 0; // Player to set the next mark.
+  private boolean gameEnded = false;
   private int localPlayer;
   private ITicTacToeRemote remote;
 
@@ -82,7 +83,9 @@ public class TicTacToe extends JFrame implements ListSelectionListener
    */
   public void valueChanged(ListSelectionEvent e)
   {
-	if (playerMarks[currentPlayer] != localPlayer)
+	if (gameEnded)
+		return;
+	if (currentPlayer != localPlayer)
 		return;
     if (e.getValueIsAdjusting())
       return;
@@ -90,18 +93,30 @@ public class TicTacToe extends JFrame implements ListSelectionListener
     int y = board.getSelectedRow();
     if (x == -1 || y == -1 || !boardModel.isEmpty(x, y))
       return;
-    if (boardModel.setCell(x, y, playerMarks[currentPlayer]))
+    if (boardModel.setCell(x, y, playerMarks[currentPlayer])) {
       setStatusMessage("Player " + playerMarks[currentPlayer] + " won!");
-    currentPlayer = 1 - currentPlayer; // The next turn is by the other player.
+      gameEnded();
+    }
     try {
+    	if (!gameEnded)
+    		setStatusMessage("Wait for your turn");
 		remote.remoteSetCell(x,y,playerMarks[currentPlayer]);
 	} catch (RemoteException e1) {
 		// TODO Auto-generated catch block
 		e1.printStackTrace();
 	}
+    currentPlayer = 1 - currentPlayer; // The next turn is by the other player.
   }
   
   public BoardModel getBoardModel(){
 	  return this.boardModel;
+  }
+  
+  public void togglePlayer(){
+	  currentPlayer = 1 - currentPlayer;
+  }
+  
+  public void gameEnded(){
+	  gameEnded = true;
   }
 }
